@@ -1,3 +1,5 @@
+> **Inkfish（墨鱼）** 是 [Quiet.md](https://github.com/s1dashu/quiet-md) 的衍生项目，由 [Followhongyun](https://github.com/Followhongyun) 在 MIT 许可下继续开发。本仓库的 macOS 应用名为 Inkfish。下方是上游 Quiet.md 的原说明。
+
 <h1 align="center">Quiet.md</h1>
 
 <p align="center">

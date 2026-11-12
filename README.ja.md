@@ -1,3 +1,5 @@
+> **Inkfish**（墨鱼）は [Quiet.md](https://github.com/s1dashu/quiet-md) のフォークです。[Followhongyun](https://github.com/Followhongyun) が MIT ライセンスの下で開発を続けています。macOS アプリの名前は Inkfish です。以下は上流プロジェクト Quiet.md の説明です。
+
 <h1 align="center">Quiet.md</h1>
 
 <p align="center">

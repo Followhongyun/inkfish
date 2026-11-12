@@ -134,7 +134,7 @@ impl Workspace {
             .children(crate::settings::update_pill(cx));
 
         let mut nav = div().flex_none().px(px(SB_X)).pb(px(16.));
-        nav = nav.child(div().px(px(8.)).pt(px(10.)).pb(px(18.)).text_size(px(18.)).font_weight(FontWeight::SEMIBOLD).flex().items_center().gap(px(10.)).child(icon("fish-brand", 27., Theme::primary())).child("大肥鱼文档"));
+        nav = nav.child(div().px(px(8.)).pt(px(10.)).pb(px(18.)).text_size(px(18.)).font_weight(FontWeight::SEMIBOLD).flex().items_center().gap(px(10.)).child(icon("fish-brand", 27., Theme::primary())).child("Inkfish"));
         nav = nav.child(div().id("fish-search").h(px(34.)).px(px(8.)).mb(px(14.)).flex().items_center().gap(px(9.)).rounded(px(8.)).bg(Theme::sidebar_hover()).text_size(px(13.)).text_color(Theme::text_caption()).cursor_pointer().child(icon("search", 16., Theme::icon())).child("搜索文档").on_click(cx.listener(|w, _, window, cx| w.open_search(window, cx))));
         for (id, label, glyph, tab) in [
             ("fish-important", "重要文档", "file-text", crate::home::HomeTab::Important),

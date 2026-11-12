@@ -1,5 +1,5 @@
 //! On-disk library: one DocxXML file per document plus a small JSON index
-//! (pinned flag, timestamps) under `~/Documents/Quiet.md`.
+//! (pinned flag, timestamps) under `~/Documents/Inkfish/.editor` (or the legacy `~/Documents/大肥鱼文档/.editor`).
 
 use crate::docxml;
 use crate::model::Document;
@@ -366,7 +366,13 @@ impl Store {
     pub fn root_dir() -> PathBuf {
         std::env::var_os("QUIET_MD_HOME")
             .map(PathBuf::from)
-            .unwrap_or_else(|| dirs::document_dir().or_else(|| dirs::home_dir().map(|h| h.join("Documents"))).unwrap_or_else(|| PathBuf::from(".")).join("大肥鱼文档").join(".editor"))
+            .unwrap_or_else(|| {
+                let docs = dirs::document_dir().or_else(|| dirs::home_dir().map(|h| h.join("Documents"))).unwrap_or_else(|| PathBuf::from("."));
+                let current = docs.join("Inkfish");
+                let legacy = docs.join("大肥鱼文档");
+                // Keep the existing library in place so documents and DSH sync are not moved.
+                if !current.exists() && legacy.exists() { legacy } else { current }.join(".editor")
+            })
     }
 
     /// Where pasted / inserted images are copied to.
