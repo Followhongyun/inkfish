@@ -289,6 +289,7 @@ pub fn shadow_s4_down() -> Vec<BoxShadow> {
 }
 
 /// Cards resting on the sidebar (更新日志): a faint lift, no border.
+#[allow(dead_code)]
 pub fn shadow_card() -> Vec<BoxShadow> {
     vec![shadow(0.04, 1., 2., 0.), shadow(0.06, 4., 14., 0.)]
 }

@@ -73,6 +73,7 @@ pub fn init(cx: &mut App) {
 
 /// A window came to the front: check again if the last check is over an
 /// hour old, so a copy left open learns of a release within hours, not 12.
+#[allow(dead_code)]
 pub fn check_if_stale(cx: &mut App) {
     let Some(u) = cx.try_global::<Updater>() else { return };
     // Before the first check (10s after launch) the timer has it.
@@ -84,6 +85,8 @@ pub fn check_if_stale(cx: &mut App) {
 /// failures and an up-to-date copy; the automatic check stays silent except
 /// for a toast, once per version, when there is something new.
 pub fn check(manual: bool, cx: &mut App) {
+    // This independently signed fork must never install upstream binaries.
+    if crate::APP_ID != "com.s1dashu.quietmd" { set(State::Unsupported, cx); return; }
     match state(cx) {
         // A finished download waits for 重启以更新.
         State::Checking | State::Downloading(_) | State::Ready(..) | State::Installing(_) => return,

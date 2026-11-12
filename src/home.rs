@@ -26,6 +26,7 @@ use std::rc::Rc;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum HomeTab {
     #[default]
+    Important,
     Recent,
     Starred,
 }
@@ -324,7 +325,7 @@ pub struct Home {
 impl Default for Home {
     fn default() -> Self {
         Home {
-            tab: HomeTab::Recent,
+            tab: HomeTab::Important,
             grid: true,
             grid_scroll: Default::default(),
             list_scroll: Default::default(),
@@ -361,7 +362,7 @@ impl Home {
 
     fn cols(&self) -> Vec<Col> {
         match self.tab {
-            HomeTab::Recent => RECENT_COLS.to_vec(),
+            HomeTab::Important | HomeTab::Recent => RECENT_COLS.to_vec(),
             HomeTab::Starred => STARRED_COLS.to_vec(),
         }
     }
@@ -426,7 +427,8 @@ impl Workspace {
     pub(crate) fn home_entries(&self) -> Vec<Entry> {
         match self.home.tab {
             // 我的文档 is the library's top level.
-            HomeTab::Recent => self.level_entries(None),
+            HomeTab::Important => self.sorted_entries(self.entries.iter().filter(|e| crate::fish::important(e)).cloned().collect()),
+            HomeTab::Recent => { let mut v: Vec<_> = self.entries.iter().filter(|e| e.meta.folder.is_none()).cloned().collect(); v.sort_by_key(|e| std::cmp::Reverse(e.meta.modified.max(e.meta.opened))); v },
             HomeTab::Starred => self.sorted_entries(self.entries.iter().filter(|e| e.meta.folder.is_none() && e.meta.starred > 0).cloned().collect()),
         }
     }
@@ -445,7 +447,7 @@ impl Workspace {
         true
     }
 
-    pub(crate) fn manual_home_sort(&self) -> bool { self.home.sort == HomeSort::Manual && self.home.tab == HomeTab::Recent }
+    pub(crate) fn manual_home_sort(&self) -> bool { false }
 
     /// Mix folders and documents unless the user explicitly groups folders first.
     fn sorted_entries(&self, mut v: Vec<Entry>) -> Vec<Entry> {
@@ -599,7 +601,7 @@ impl Workspace {
         // Too narrow for the search box: a search icon beside +, in the same style.
         let search = self.header_search(window, cx);
         let narrow = search.is_none();
-        let header = page_header(self, crate::settings::text("主页"), 26., cx).relative().children(search)
+        let header = page_header(self, "大肥鱼文档", 26., cx).relative().children(search)
             .when(narrow, |d| d.child(crate::ui::header_icon("home-search", "search").mr(px(4.))
                 .tip(crate::settings::tr("搜索文档", "Search documents"), Some(crate::shortcuts::hint("workspace::FocusSearch", "⌘ + J")))
                 .on_click(cx.listener(|w, _, window, cx| w.open_search(window, cx)))))
@@ -676,7 +678,8 @@ impl Workspace {
                     .tip(crate::settings::text("退出批量操作"), None)
                     .on_click(cx.listener(|w, _, _, cx| { w.batch = None; w.row_menu = None; cx.notify(); })))
         } else { toolbar
-            .child(tab("home-tab-recent", crate::settings::text("我的文档"), HomeTab::Recent))
+            .child(tab("home-tab-important", "重要文档", HomeTab::Important))
+            .child(tab("home-tab-recent", "最近编辑", HomeTab::Recent))
             .child(tab("home-tab-star", crate::settings::text("收藏"), HomeTab::Starred))
             .child(div().flex_1())
             .child(text_btn("home-batch", "batch", crate::settings::text("批量管理"), true).text_color(Theme::text_caption()).mr(px(8.))

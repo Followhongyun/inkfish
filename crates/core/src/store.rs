@@ -366,7 +366,7 @@ impl Store {
     pub fn root_dir() -> PathBuf {
         std::env::var_os("QUIET_MD_HOME")
             .map(PathBuf::from)
-            .unwrap_or_else(|| dirs::document_dir().or_else(|| dirs::home_dir().map(|h| h.join("Documents"))).unwrap_or_else(|| PathBuf::from(".")).join("Quiet.md"))
+            .unwrap_or_else(|| dirs::document_dir().or_else(|| dirs::home_dir().map(|h| h.join("Documents"))).unwrap_or_else(|| PathBuf::from(".")).join("大肥鱼文档").join(".editor"))
     }
 
     /// Where pasted / inserted images are copied to.

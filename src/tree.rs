@@ -28,7 +28,7 @@ impl<'a> Tree<'a> {
         let mut roots: Vec<&Entry> = vec![];
         let mut kids: HashMap<&str, Vec<&Entry>> = HashMap::new();
         // 本机文件 are not in 我的文档: the sidebar lists them on their own.
-        for e in entries.iter().filter(|e| !e.meta.local()) {
+        for e in entries.iter() {
             match parent(e) {
                 Some(p) => kids.entry(p).or_default().push(e),
                 None => roots.push(e),
@@ -42,7 +42,7 @@ impl<'a> Tree<'a> {
                 stack.extend(kids.get(id).map_or(vec![], |v| v.iter().map(|e| e.id.as_str()).collect()));
             }
         }
-        for e in entries.iter().filter(|e| !e.meta.local()) {
+        for e in entries.iter() {
             if !seen.contains(e.id.as_str()) {
                 seen.insert(&e.id);
                 if let Some(v) = parent(e).and_then(|p| kids.get_mut(p)) {

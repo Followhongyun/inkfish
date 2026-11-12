@@ -133,34 +133,17 @@ impl Workspace {
             .child(div().flex_1())
             .children(crate::settings::update_pill(cx));
 
-        // The nav is just 主页: 36px items, a blue tint when selected. Its
-        // icon column (x 17) is shared with 搜索 and the doc rows.
-        let home_on = self.view == View::Home;
-        let nav = div().flex_none().pt(px(4.)).pb(px(4.)).px(px(SB_X)).child(
-            div()
-                .id("nav-home")
-                .h(px(ROW_H))
-                .pl(px(6.))
-                .pr(px(4.))
-                .flex()
-                .items_center()
-                .rounded(px(ROW_R))
-                .cursor_pointer()
-                .text_size(px(13.))
-                .line_height(px(20.))
-                .when(home_on, |d| d.bg(Theme::sidebar_selected()).text_color(Theme::text()))
-                .when(!home_on, |d| d.text_color(Theme::sidebar_text()).hover(|s| s.bg(Theme::sidebar_hover())))
-                .child(
-                    // Selected or not, the same outline: the row's fill marks the selection.
-                    div().size(px(20.)).flex_none().flex().items_center().justify_center().mr(px(9.)).child(icon(
-                        "home",
-                        ROW_ICON,
-                        Theme::icon(),
-                    )),
-                )
-                .child(crate::settings::tr("主页", "Home"))
-                .on_click(cx.listener(|w, _, _, cx| w.show_view(View::Home, cx))),
-        );
+        let mut nav = div().flex_none().px(px(SB_X)).pb(px(16.));
+        nav = nav.child(div().px(px(8.)).pt(px(10.)).pb(px(18.)).text_size(px(18.)).font_weight(FontWeight::SEMIBOLD).flex().items_center().gap(px(10.)).child(icon("fish-brand", 27., Theme::primary())).child("大肥鱼文档"));
+        nav = nav.child(div().id("fish-search").h(px(34.)).px(px(8.)).mb(px(14.)).flex().items_center().gap(px(9.)).rounded(px(8.)).bg(Theme::sidebar_hover()).text_size(px(13.)).text_color(Theme::text_caption()).cursor_pointer().child(icon("search", 16., Theme::icon())).child("搜索文档").on_click(cx.listener(|w, _, window, cx| w.open_search(window, cx))));
+        for (id, label, glyph, tab) in [
+            ("fish-important", "重要文档", "file-text", crate::home::HomeTab::Important),
+            ("fish-recent", "最近编辑", "history", crate::home::HomeTab::Recent),
+            ("fish-favorites", "收藏", "star", crate::home::HomeTab::Starred),
+        ] {
+            let on = self.view == View::Home && self.home.tab == tab;
+            nav = nav.child(div().id(id).h(px(36.)).px(px(8.)).flex().items_center().gap(px(10.)).rounded(px(8.)).text_size(px(13.)).cursor_pointer().when(on, |d| d.bg(Theme::sidebar_selected())).hover(|d| d.bg(Theme::sidebar_hover())).child(icon(glyph, 17., Theme::icon())).child(label).on_click(cx.listener(move |w, _, _, cx| { w.home.tab = tab; w.show_view(View::Home, cx); })));
+        }
 
         let mut list = div().flex().flex_col().px(px(SB_X)).pb(px(8.));
         // Pinned docs are shortcuts: they stay in 我的文档 too.
@@ -174,21 +157,10 @@ impl Workspace {
             }
             list = list.child(div().h(px(GROUP_GAP - SECTION_TOP)));
         }
-        list = list.child(self.section(1, crate::settings::text("我的文档"), cx));
+        list = list.child(self.section(1, "文档库", cx));
         if !self.folded[1] {
             list = list.child(self.render_folder_rows(window, cx));
         }
-        // 本机文件: Markdown files edited where they are, outside the library.
-        let local = self.local_entries();
-        if !local.is_empty() {
-            list = list.child(div().h(px(GROUP_GAP - SECTION_TOP))).child(self.section(2, crate::settings::tr("本机文件", "Files on this computer"), cx));
-            if !self.folded[2] {
-                for e in local {
-                    list = list.child(self.doc_row(e, "local", 0, false, cx));
-                }
-            }
-        }
-
         // The footer holds one row: 设置 (存储管理 and 回收站 live in 设置).
         // The 批量操作 toolbar keeps the footer glyphs: bare on the sidebar, a rounded fill on hover.
         let footer_btn = |id: &'static str, name: &'static str, tip: &'static str, enabled: bool, on: bool| {
@@ -224,7 +196,9 @@ impl Workspace {
             .flex()
             .flex_col()
             .when(self.batch.is_none(), |d| {
-                d.child(footer_slot(
+                d.child(footer_slot(footer_row("fish-new-folder", "folder-plus", "新建文件夹").on_click(cx.listener(|w, _, window, cx| w.new_folder(None, window, cx)))))
+                .child(footer_slot(footer_row("fish-trash", "bin", "回收站").on_click(cx.listener(|w, _, _, cx| w.show_view(View::Trash, cx)))))
+                .child(footer_slot(
                     footer_row("ft-settings", "settings-gear", crate::settings::tr("设置", "Settings"))
                         .on_click(cx.listener(|w, _, _, cx| w.show_view(View::Settings, cx))),
                 ))
@@ -248,7 +222,7 @@ impl Workspace {
             .child(header)
             .child(nav)
             .child(div().id("doc-list").flex_1().min_h_0().overflow_y_scroll().track_scroll(&self.list_scroll).child(list))
-            .children(crate::changelog::card(cx.listener(|_, _, _, cx| cx.notify())))
+            
             .child(footer)
             .into_any_element()
     }

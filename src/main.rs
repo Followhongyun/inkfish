@@ -1,14 +1,17 @@
 #![recursion_limit = "512"]
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
-pub(crate) const APP_ID: &str = "com.s1dashu.quietmd";
+pub(crate) const APP_ID: &str = "com.followhongyun.dafeiyu.documents";
 
 mod app;
 mod shared_store;
 mod quick_note;
 mod assets;
+#[allow(dead_code)]
 mod changelog;
+#[allow(dead_code)]
 mod guides;
+mod fish;
 mod clipboard;
 #[cfg(feature = "devtools")]
 mod devtools;
@@ -92,7 +95,7 @@ fn open_main_window(scripted: bool, cx: &mut App) {
             app_id: Some(crate::APP_ID.into()),
             window_decorations: if cfg!(target_os = "linux") { Some(WindowDecorations::Client) } else { None },
             titlebar: Some(TitlebarOptions {
-                title: Some("Quiet.md".into()),
+                title: Some("大肥鱼文档".into()),
                 appears_transparent: cfg!(any(target_os = "macos", target_os = "windows")),
                 traffic_light_position: Some(point(px(20.), px(app::HEADER_H / 2. - 7.))),
             }),
@@ -117,8 +120,8 @@ fn main() {
     let root = store::Store::root_dir();
     logging::write(&format!("library {}", root.display()));
     // A library that was here before this launch can show 更新日志.
-    let existed = guides::seeded(&root).unwrap_or(false);
-    if !scripted && let Err(err) = guides::initialize(&root) {
+    let existed = root.exists();
+    if !scripted && let Err(err) = std::fs::create_dir_all(&root).map_err(anyhow::Error::from) {
         logging::fatal(&format!("无法初始化文档库 / Could not set up the library at {}", root.display()), &err);
     }
     let app = Application::new().with_assets(assets::Assets);

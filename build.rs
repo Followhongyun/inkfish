@@ -70,6 +70,7 @@ fn collect(root: &Path, dir: &Path, out: &mut Vec<(String, String)>) {
             collect(root, &p, out);
         } else {
             let rel = p.strip_prefix(root).unwrap().to_string_lossy().replace('\\', "/");
+            if rel.starts_with("branding/") && rel != "branding/app-icon.png" { continue; }
             out.push((rel, p.to_string_lossy().into_owned()));
         }
     }

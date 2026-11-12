@@ -5,7 +5,6 @@
 
 use crate::app::{RowMenu, Workspace};
 use crate::settings::tr;
-use crate::store::Entry;
 use crate::theme::Theme;
 use crate::ui::{ToastKind, icon, popover};
 use gpui::*;
@@ -32,13 +31,6 @@ fn pick(cx: &mut App) -> impl std::future::Future<Output = Option<Vec<PathBuf>>>
 }
 
 impl Workspace {
-    /// 本机文件, last opened first.
-    pub(crate) fn local_entries(&self) -> Vec<&Entry> {
-        let mut v: Vec<&Entry> = self.entries.iter().filter(|e| e.meta.local()).collect();
-        v.sort_by(|a, b| b.meta.opened.cmp(&a.meta.opened).then_with(|| a.id.cmp(&b.id)));
-        v
-    }
-
     /// 打开文件…: pick Markdown files and open them in place.
     pub fn open_file_dialog(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.row_menu = None;
@@ -96,12 +88,17 @@ impl Workspace {
 
     /// The "…" menu of a 本机文件 row.
     pub(crate) fn local_row_menu(&self, m: RowMenu, cx: &mut Context<Self>) -> Vec<AnyElement> {
+        let star = m.id.clone();
+        let mv = m.id.clone();
+        let starred = self.entries.iter().any(|e| e.id == m.id && e.meta.starred > 0);
         let (import, rename, reveal, forget) = (m.id.clone(), m.id.clone(), m.id.clone(), m.id.clone());
         let row = |id: &'static str, glyph: &'static str, label: &'static str| crate::ui::menu_row(id, SharedString::from(id)).child(icon(glyph, 16., Theme::icon())).child(label);
         let pos = if m.pos.x < px(0.) { point(-m.pos.x, m.pos.y + px(22.)) } else { m.pos };
         let shown = if cfg!(target_os = "macos") { tr("在访达中显示", "Show in Finder") } else if cfg!(target_os = "windows") { tr("在文件资源管理器中显示", "Show in File Explorer") } else { tr("在文件管理器中显示", "Show in File Manager") };
         vec![deferred(anchored().position(pos).snap_to_window_with_margin(px(8.)).child(popover().id("local-row-menu").occlude().w(px(200.)).py(px(crate::ui::MENU_PAD_Y))
             .on_mouse_down_out(cx.listener(|w, _, _, cx| { w.row_menu = None; cx.notify(); }))
+            .child(row("lr-star", "star", if starred { "取消收藏" } else { "收藏" }).on_click(cx.listener(move |w, _, _, cx| w.toggle_star(&star, cx))))
+            .child(row("lr-move", "folder-input", "移动到").on_click(cx.listener(move |w, _, window, cx| w.open_move(vec![mv.clone()], window, cx))))
             .child(row("lr-import", "folder-input", tr("导入到文档库", "Import into library")).on_click(cx.listener(move |w, _, window, cx| w.import_local(&import, window, cx))))
             .child(row("lr-rename", "square-pen", tr("重命名", "Rename")).on_click(cx.listener(move |w, _, window, cx| w.start_rename(&rename, window, cx))))
             .child(row("lr-reveal", "folder", shown).on_click(cx.listener(move |w, _, _, cx| {
